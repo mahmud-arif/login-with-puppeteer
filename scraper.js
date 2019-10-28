@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const promptData = require('./customError'); 
 const prompt = require('prompt');
 const USERNAME_SELECTOR = '#m_login_email';
 const PASSWORD_SELECTOR = 'input[type="password" i]';
@@ -24,54 +23,45 @@ async function run (username, password) {
 
         await page.waitForSelector('input[type="submit"]'),
         await page.click('input[type="submit" i]'),
-        await page.waitForNavigation({
-          waitUntil: 'networkidle2'
-        })
-    await page.waitFor(6000); 
-     try {
-       const text = await page.evaluate(() => {
+        await page.waitForNavigation({ waitUntil: 'networkidle2' })
+    
+        await page.waitFor(6000); 
+    
+       try {
+         const text = await page.evaluate(() => {
          const selector = document.querySelector('#checkpoint_title').innerHTML;
          return selector;
-       });
+         });
+         
        if (text === 'Enter login code to continue') {
-         console.log(text); 
-         let code = await promptData(); 
-           await page.awitForSelector('#approvals_code');
-           await page.click('#approvals_code');
-           await page.keyboard.type(code);
-   
-           await page.click('input[type="submit" i]');
+        let code = await promptData(); 
+
+        await page.awitForSelector('#approvals_code');
+        await page.click('#approvals_code');
+        await page.keyboard.type(code);
+
+        await page.click('input[type="submit" i]');
        }
-     } catch (err) {
-       console.log(err);
-     }
-    
-      
+     } catch (err) {}
    
-        const message = await page.evaluate(() => {
-         const selector = document.querySelectorAll('a')[3].innerText;
+       const message = await page.evaluate(() => {
+       const selector = document.querySelectorAll('a')[3].innerText;
          return selector;
        });
        console.log(message); 
-    
-        
-    
 
-    
-        // if (text === 'ACCESS DENIED!') console.log('LogIn failed');
-        // else console.log('login success'); 
-
-        await page.screenshot({
-            path: './screenshots/page1.png', 
-            fullPage: true
-            })
-      
        await browser.close()
-    
-
-    } catch (err) {console.log(err); }
-  
+    } catch (err) {console.log(err); } 
 }; 
+
+
+const promtData = () => new Promise((resolve, reject) =>
+  {
+    prompt.start();
+    let code;
+    prompt.get(['code'], async (err, result) => { resolve(result.code); })
+  })
+
 
 
 module.exports = run; 
