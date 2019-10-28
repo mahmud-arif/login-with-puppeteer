@@ -6,9 +6,8 @@ dotenv.config();
 var schema = {
   properties: {
       username: { 
-        ask: function () {
-          return !process.env.USERNAME; 
-        }
+        description: 'username',
+        
       },
       password: {
         description: 'password',
