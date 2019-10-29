@@ -7,15 +7,16 @@ const PASSWORD_SELECTOR = 'input[type="password" i]';
 
 class FbLogin {
 
+  async init() {
+     const browser = await puppeteer.launch({ headless: false });
+     const page = await browser.newPage()
+    return {page,browser}
+  }
+
 // create browser instance --> open a tab --> goto fb
-  async browserLaunch() {
-    const browser = await puppeteer.launch({ headless: false });
-    const page = await browser.newPage()
+  async browserLaunch(page) {
     console.log('Open facebook in the browser');
     await page.goto('https://mbasic.facebook.com/', { waitUntil: 'networkidle2' })
-    await this.login(page); 
-    await browser.close()
-    
   }
 
  //Login fb
@@ -65,19 +66,21 @@ class FbLogin {
         await page.waitFor(6000);
       }
     } catch (err) { }
-
-    await this.readMessage(page);
   }
 
   // read message
-  async readMessage(page){
+  async readMessage(page, browser){
     // If login success Grab message data otherwise grab error message
     const message = await page.evaluate(() => {
     const selector = document.querySelectorAll('a')[3].innerText;
     return selector;
     });
     console.log(message);
-   }
+  }
+
+  async close(browser) {
+    await browser.close(); 
+  }
 
   //helper method for prompt
   async promtData(variable) {
@@ -92,6 +95,11 @@ class FbLogin {
   }
 
 }
-
-const Login = new FbLogin(); 
-Login.browserLaunch();
+(async () => {
+  const facebook = new FbLogin();
+  const { browser, page } =await facebook.init();
+  await facebook.browserLaunch(page);
+  await facebook.login(page);
+  await facebook.readMessage(page);
+  await facebook.close(browser); 
+})(); 
