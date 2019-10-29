@@ -8,9 +8,9 @@ const PASSWORD_SELECTOR = 'input[type="password" i]';
 class FbLogin {
 
   async init() {
-     const browser = await puppeteer.launch({ headless: false });
-     const page = await browser.newPage()
-    return {page,browser}
+     this.browser = await puppeteer.launch({ headless: false });
+     this.page = await this.browser.newPage()
+     return this
   }
 
 // create browser instance --> open a tab --> goto fb
@@ -97,9 +97,9 @@ class FbLogin {
 }
 (async () => {
   const facebook = new FbLogin();
-  const { browser, page } =await facebook.init();
-  await facebook.browserLaunch(page);
-  await facebook.login(page);
-  await facebook.readMessage(page);
-  await facebook.close(browser); 
+  const pointer =await facebook.init();
+  await facebook.browserLaunch(pointer.page);
+  await facebook.login(pointer.page);
+  await facebook.readMessage(pointer.page);
+  await facebook.close(pointer.browser); 
 })(); 
