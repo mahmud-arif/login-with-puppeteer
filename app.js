@@ -4,45 +4,49 @@ const prompt = require('prompt');
 const USERNAME_SELECTOR = '#m_login_email';
 const PASSWORD_SELECTOR = 'input[type="password" i]';
 
-try {
-  run(); 
-} catch (err) {console.log(err); }
 
+class FbLogin {
 
-async function run() {
-    const browser = await puppeteer.launch({
-      headless: false
-    })
+// create browser instance --> open a tab --> goto fb
+  async browserLaunch() {
+    const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage()
+    console.log('Open facebook in the browser');
+    await page.goto('https://mbasic.facebook.com/', { waitUntil: 'networkidle2' })
+    await this.login(page); 
+    await browser.close()
+    
+  }
 
-    await page.goto('https://mbasic.facebook.com/', {
-      waitUntil: 'networkidle2'
-    })
-
+ //Login fb
+  async login(page){
     page.waitForSelector(USERNAME_SELECTOR)
-    await page.click(USERNAME_SELECTOR, {visible: true});
-     
+    await page.click(USERNAME_SELECTOR, { visible: true });
+
     // Username requested
-    let result = await promtData(['username']);
+    console.log('Enter your username');
+    let result = await this.promtData(['username']);
     await page.keyboard.type(result.username);
-    
-    
+
+
     await page.waitForSelector(PASSWORD_SELECTOR);
     await page.click(PASSWORD_SELECTOR, { visible: true });
-  
-     // Password requested
-    result = await promtData([{name: "password", hidden: true}]);
+
+    // Password requested
+    console.log("Enter your password");
+    result = await this.promtData([{ name: "password", hidden: true }]);
     await page.keyboard.type(result.password);
-  
-     // Login to Facebook
+
+    // Login to Facebook
+    console.log('Now login');
     await page.waitForSelector('input[type="submit"]'),
     await page.click('input[type="submit" i]'),
-      
+
 
     await page.waitFor(6000);
 
     try {
-        const text = await page.evaluate(() => {
+      const text = await page.evaluate(() => {
         const selector = document.querySelector('#checkpoint_title').innerHTML;
         return selector;
       });
@@ -50,33 +54,44 @@ async function run() {
       if (text === 'Enter login code to continue') {
 
         // Verification code requested
-        let code = await promtData(['code']);
+        console.log(text);
+        let code = await this.promtData(['code']);
 
         // Verification code submitted
         await page.waitForSelector('#approvals_code');
         await page.click('#approvals_code');
         await page.keyboard.type(code.code);
         await page.click('input[type="submit" i]');
-        await page.waitFor(6000); 
+        await page.waitFor(6000);
       }
     } catch (err) { }
-     
-    // If login success Grab message data otherwise grab error message
-    const message = await page.evaluate(() => {
-      const selector = document.querySelectorAll('a')[3].innerText;
-      return selector;
-    });
-    console.log(message);
 
-    await browser.close()
+    await this.readMessage(page);
   }
 
+  // read message
+  async readMessage(page){
+    // If login success Grab message data otherwise grab error message
+    const message = await page.evaluate(() => {
+    const selector = document.querySelectorAll('a')[3].innerText;
+    return selector;
+    });
+    console.log(message);
+   }
 
-const promtData = (variable) => new Promise((resolve, reject) => {
-  prompt.start();
-  prompt.message = ''; 
-  
-  prompt.get(variable, async (err, result) => {
-    resolve(result);
-  })
-})
+  //helper method for prompt
+  async promtData(variable) {
+    return new Promise((resolve, reject) => {
+      prompt.start();
+      prompt.message = '';
+
+      prompt.get(variable, async (err, result) => {
+        resolve(result);
+      })
+    })
+  }
+
+}
+
+const Login = new FbLogin(); 
+Login.browserLaunch();
